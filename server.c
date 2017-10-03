@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -6,10 +7,10 @@
 #include <netinet/in.h>
 
 #define SERV_PORT  8000
-int main(void)
+int main()
 {
 
-	int lfd, cfd;
+	int lfd, cfd, pid;
 	struct sockaddr_in serv_addr, clin_addr;
 	socklen_t clin_len;
 	char buf[1024]; 
@@ -27,13 +28,40 @@ int main(void)
 	bind(lfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)); //(struct sockaddr *)&serv_addr强制类型转换   泛型指针 void＊
 
 	listen(lfd,128);
+while(1){
+
+
+	printf("======waiting for client's request======\n");  
 
 	clin_len = sizeof(clin_addr);
-	cfd = accept(lfd, (struct sockaddr *)&clin_addr, &clin_len);
-	len = read(cfd, buf, sizeof(buf)); //读取存到缓存中 buf buffer
-	write(STDOUT_FILENO, buf, len );//标准输出 打印到屏幕上
-	close(lfd);
-	close(cfd);
-	return 0;
+	cfd = accept(lfd, (struct sockaddr *)&clin_addr, &clin_len); //cfd connect f d
+	pid_t pid = fork();
+	if (pid==0)
+	{
+		printf("我是子进程\n");
+            close(lfd);
+            // do_something
+            // char time_message[100];
+            // timer_t now_time = (timer_t)time(NULL);
+            // snprintf(time_message, sizeof(time_message), "%.24s\n", ctime((const timer_t)&now_time));
+            // send(connfd, time_message, sizeof(time_message), 0);
 
+            // close(cfd);
+            exit(0);/* code */
+	} else if (pid == -1) {
+            close(cfd);
+            continue;
+        } else {
+            close(cfd);
+        }
+
+    }
+	// len = read(cfd, buf, sizeof(buf)); //读取存到缓存中 buf buffer
+	// write(STDOUT_FILENO, buf, len );//标准输出 打印到屏幕上
+	// close(lfd);
+	// close(cfd);
+	// return 0;
+
+close(lfd);
+return 0;
 }
