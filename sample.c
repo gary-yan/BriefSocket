@@ -14,6 +14,8 @@
 
 #define SERVER_STRING "Server: garyhttpd/0.1.0\r\n"
 
+void doit(int sockfd);
+
 int main()
 {
     /* 定义server和client的文件描述符 */
@@ -58,6 +60,9 @@ int main()
 
     printf("http server running on port %d\n", port);
 
+
+    pid_t pid;//设置fork
+
     for( ; ;){
         /* 调用了accept函数，阻塞了程序，直到接收到客户端的请求 */
         client_fd = accept(server_fd, (struct sockaddr *)&client_addr,
@@ -66,14 +71,12 @@ int main()
             perror("accept"); //print error打印错误
             exit(-1);
         }
-
         printf("accept a client\n");
 
         printf("client socket fd: %d\n", client_fd);
 
         char str[] = "Hello World";
 
-         sleep(3);//3秒之后再向客户端发送数据
          
         write(client_fd, str, sizeof(str));
         /* 调用recv函数接收客户端发来的请求信息 */
@@ -94,10 +97,22 @@ int main()
         // send(client_fd, buf, strlen(buf), 0);
         // sprintf(buf, "Hello World\r\n");
         // send(client_fd, buf, strlen(buf), 0);
+        if( (pid = fork()) == 0 ){
+            close(server_fd);/*子进程不需要监听，关闭*/
+            doit(client_fd);/*针对已连接的客户端套接字进行读写*/
+            close(client_fd);/*处理完毕，关闭客户端连接*/
+            exit(0);/*自觉退出*/
+        }
 
         /* 关闭客户端套接字 */
         close(client_fd);
     // close(server_fd);
 }
+
     return 0;
+}
+void doit(int sockfd){
+    char str[] = "Hello World";
+    sleep(3);//3秒之后再向客户端发送数据
+    write(sockfd, str, sizeof(str));
 }
